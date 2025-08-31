@@ -1,0 +1,155 @@
+# ===========================================================
+# REDIS LEADER DEPLOYMENT
+# This sets up a single Redis pod that handles all WRITE operations.
+# Only one leader exists to keep data consistent.
+# ===========================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-leader
+spec:
+  replicas: 1                     # Only one leader pod
+  selector:
+    matchLabels:
+      app: redis
+      role: leader
+  template:
+    metadata:
+      labels:
+        app: redis
+        role: leader
+    spec:
+      containers:
+      - name: redis
+        image: redis:6.0           # Use Redis version 6
+        ports:
+        - containerPort: 6379      # Default Redis port
+
+---
+# ===========================================================
+# REDIS LEADER SERVICE
+# This service gives the frontend a stable way to talk to the leader pod.
+# All new messages from the app are written here.
+# ===========================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-leader
+spec:
+  type: ClusterIP                # Only reachable inside the cluster
+  selector:
+    app: redis
+    role: leader
+  ports:
+    - port: 6379                 # Service port
+      targetPort: 6379           # Pod port it maps to
+
+---
+# ===========================================================
+# REDIS FOLLOWER DEPLOYMENT
+# Follower pods handle READ operations. Multiple replicas allow scaling.
+# They replicate data from the leader automatically.
+# ===========================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-follower
+spec:
+  replicas: 2                     # Two follower pods
+  selector:
+    matchLabels:
+      app: redis
+      role: follower
+  template:
+    metadata:
+      labels:
+        app: redis
+        role: follower
+    spec:
+      containers:
+      - name: redis
+        image: redis:6.0
+        ports:
+        - containerPort: 6379
+
+---
+# ===========================================================
+# REDIS FOLLOWER SERVICE
+# Frontend reads messages from this service.
+# Provides a stable internal address for follower pods.
+# ===========================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-follower
+spec:
+  type: ClusterIP
+  selector:
+    app: redis
+    role: follower
+  ports:
+    - port: 6379
+      targetPort: 6379
+
+---
+# ===========================================================
+# FRONTEND DEPLOYMENT
+# Deploys the PHP Guestbook app.
+# Multiple pods allow load balancing so many users can write/read simultaneously.
+# ===========================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 3                     # Three frontend pods
+  selector:
+    matchLabels:
+      app: guestbook
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        app: guestbook
+        tier: frontend
+    spec:
+      containers:
+      - name: php-guestbook
+        image: gcr.io/google-samples/gb-frontend:v5
+        ports:
+        - containerPort: 80        # HTTP port
+        env:
+        - name: GET_HOSTS_FROM
+          value: dns              # Find Redis via DNS
+        - name: REDIS_LEADER_SERVICE_HOST
+          value: redis-leader
+        - name: REDIS_FOLLOWER_SERVICE_HOST
+          value: redis-follower
+
+---
+# ===========================================================
+# FRONTEND SERVICE
+# Exposes the frontend inside the cluster.
+# Change to LoadBalancer if you want external access.
+# ===========================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: guestbook
+    tier: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+
+# ===========================================================
+# HOW DATA FLOWS
+# 1. User opens the Guestbook app in the browser
+# 2. Messages are written to the Redis Leader via the leader service
+# 3. Redis Followers automatically replicate the leader's data
+# 4. Frontend reads messages from the Redis Followers
+# This setup keeps writes consistent and makes reads scalable.
+# ===========================================================
