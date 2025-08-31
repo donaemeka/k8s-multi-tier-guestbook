@@ -67,9 +67,7 @@ This was not all smooth sailing! Here are a few hiccups I had along the way:
 
 My Solution:
 
-- I built my own Docker image for the PHP frontend and published it to my Docker Hub account (donaemeka/fancy-app:latest). Then I just updated the 
-
-YAML file to use my image. Problem solved!
+- I built my own Docker image for the PHP frontend and published it to my Docker Hub account (donaemeka/fancy-app:latest). Then I just updated the YAML file to use my image. Problem solved!
 
 ## "Port 8080 is already in use":
 
@@ -77,9 +75,7 @@ YAML file to use my image. Problem solved!
 
 My Solution: 
 
-- I learned the lsof -i :8080 command to find the process that was hogging the port and then free it up. It was a great lesson in basic system 
-
-troubleshooting.
+- I learned the lsof -i :8080 command to find the process that was hogging the port and then free it up. It was a great lesson in basic system troubleshooting.
 
 ## Understanding the "Why": At first, I did not get why we needed separate Redis pods for leader and follower.
 
