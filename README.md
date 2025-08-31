@@ -2,9 +2,7 @@
 
  This is a project I built to get hands-on experience with deploying a multi-tier application on Kubernetes. It is a simple guestbook App where 
  
- users can leave a message, but underneath, it's packed with core DevOps concepts like container orchestration, service discovery, and database 
- 
- replication.
+ users can leave a message, but underneath, it's packed with core DevOps concepts like container orchestration, service discovery, and database replication.
 
 
 ## Project Structure
@@ -39,9 +37,7 @@ In simple terms, this project has three main parts:
 
 ## The Read-Replica Databases (Redis Followers): 
 
-- These pods are copies of the main database. Their job is to handle everyone reading the guestbook messages, which takes load off the leader and 
-
-makes the app faster.
+- These pods are copies of the main database. Their job is to handle everyone reading the guestbook messages, which takes load off the leader and makes the app faster.
 
 ## The magic of Kubernetes is how it keeps all these parts talking to each other reliably.
 
@@ -90,7 +86,6 @@ troubleshooting.
 My Solution: 
 
 - I did some reading and realized it is a classic pattern: having one dedicated writer prevents conflicts and makes the app consistent, while 
-
 multiple readers make it scalable. It finally clicked!
 
 
@@ -103,7 +98,7 @@ This project was a huge step forward for me. I got practical experience with:
 
 - Design Patterns: Implementing and understanding the leader-follower pattern for stateful workloads.
 
-= Troubleshooting: Debugging ImagePullBackOff, examining pod logs, and describing resources to find issues.
+- Troubleshooting: Debugging ImagePullBackOff, examining pod logs, and describing resources to find issues.
 
 - Resilience: Seeing how Kubernetes automatically restarts containers and keeps the application available.
 
